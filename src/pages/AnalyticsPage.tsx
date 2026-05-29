@@ -61,15 +61,25 @@ export default function AnalyticsPage() {
 
   async function fetchReports() {
     setLoading(true);
-    let days = period === '7d' ? 7 : period === 'today' ? 1 : 30;
-    const fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - days);
-    const { data } = await supabase
-      .from('profit_reports')
-      .select('*')
-      .gte('report_date', fromDate.toISOString().split('T')[0])
-      .order('report_date', { ascending: true });
-    setReports((data as ProfitReport[]) || []);
+    try {
+      let days = period === '7d' ? 7 : period === 'today' ? 1 : 30;
+      const fromDate = new Date();
+      fromDate.setDate(fromDate.getDate() - days);
+      const { data, error } = await supabase
+        .from('profit_reports')
+        .select('*')
+        .gte('report_date', fromDate.toISOString().split('T')[0])
+        .order('report_date', { ascending: true });
+      if (error) {
+        console.error('Fetch error:', error);
+        setReports([]);
+      } else {
+        setReports((data as ProfitReport[]) || []);
+      }
+    } catch (err) {
+      console.error('Error fetching reports:', err);
+      setReports([]);
+    }
     setLoading(false);
   }
 
